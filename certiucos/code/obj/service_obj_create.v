@@ -7,6 +7,7 @@ Open Scope code_scope.
 
 Definition PlaceHolder:= &ₐ OSPlaceHolder′.
 
+(* the code for the function that creates a service object *)
 Definition service_obj_create_impl :=
 Int32 ·service_obj_create·(⌞katt @ Int16u ; satt @ Int32u⌟)··{  
         ⌞

@@ -14,6 +14,7 @@ Definition kobjoper_succ  (vl: vallist) (O1 : osabst) (rst : option val * option
     \/ verr <> (Vint32 (Int.repr OS_NO_ERR)) /\ O_opt = None)
   end.
 
+(* the abstract program for the function **kernel_obj_oper** *) 
 Definition kobjoper  (vl: vallist) :=
   match vl with
     v1 :: v2 :: nil =>

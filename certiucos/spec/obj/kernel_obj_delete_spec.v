@@ -72,7 +72,8 @@ Definition kobjdel_ret (vl: vallist) (O1 : osabst) (rst : option val * option os
     opv = Some Vnull /\
     O_opt = Some O1
   end.  
-  
+
+(* the abstract program for the function **kernel_obj_delete** *) 
 Definition kobjdel  (vl: vallist) :=
   match vl with
     v1 :: nil =>

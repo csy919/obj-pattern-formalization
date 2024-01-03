@@ -5,6 +5,7 @@ Require Import os_ucos_h.
 
 Open Scope code_scope.
 
+(* the code for the function that gets the index for an unused service object *)
 Definition get_free_obj_idx_impl := 
   Int8s ·get_free_obj_idx·(⌞⌟)··{ 
         ⌞

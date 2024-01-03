@@ -5,6 +5,7 @@ Require Import os_ucos_h.
 
 Open Scope code_scope.
 
+(* the code for the function that deletes a service object *) 
 Definition service_obj_delete_impl :=
 Int32 ·service_obj_delete·(⌞idx @ Int32⌟)··{
         ⌞

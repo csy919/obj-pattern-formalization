@@ -233,6 +233,7 @@ Next Obligation.
   apply EcbMod.map_del_sem.
 Qed.
 
+
 (* Module about abstract service objects *)
 
 Inductive obj_id :=
@@ -247,6 +248,8 @@ End absobj.
 
 Module ObjMod := MapLib.MapFun idxspec absobj. 
 
+(* mapping from each index of a service object to the abstract representation
+     of the service object *) 
 Program Instance ObjMap: PermMap int32 (obj_id * int32) ObjMod.map :=    
  {
     usePerm := ObjMod.usePerm;
@@ -340,6 +343,7 @@ Qed.
 Next Obligation.
   apply ObjMod.map_del_sem.
 Qed.
+
 
 (* Module about abstract OSTCBPrioTbl block *)
 
@@ -456,6 +460,8 @@ End absauxloc.
 
 Module AuxLocMod := MapLib.MapFun tidspec absauxloc. 
 
+(* mapping from each task ID to the value of the auxiliary variable
+    for the current program location of the task *) 
 Program Instance AuxLocMap: PermMap tid val AuxLocMod.map :=  
  {
     usePerm := AuxLocMod.usePerm;
@@ -550,7 +556,7 @@ Next Obligation.
   apply AuxLocMod.map_del_sem.
 Qed.
 
-(* Module about auxiliary variable for object  pointer *) 
+(* Module about auxiliary variable for ECB (kernel objecte)  pointer *) 
 
 Module absauxptr.
   Definition B : Set := val. 
@@ -559,6 +565,8 @@ End absauxptr.
 
 Module AuxPtrMod := MapLib.MapFun tidspec absauxptr. 
 
+(* mapping from each task ID to the value of the auxiliary variable
+    for the currently handled ECB (kernal object) pointer by the task *)  
 Program Instance AuxPtrMap: PermMap tid val AuxPtrMod.map := 
  {
     usePerm := AuxPtrMod.usePerm;
@@ -659,10 +667,9 @@ Inductive absdataid:=
 | absecblsid: absdataid
 | ostmid : absdataid
 | curtid:absdataid
-| absptlsid: absdataid (* ostcbpriotbl *)
-| absobjsid: absdataid (* abstract objects *) 
-(* | auxlocid: absdataid (* auxiliary program location (not explicitly tracked in abstract state) *) *)
-(* | auxptrid: absdataid (* auxiliary object pointer (not explicitly tracked in abstract state) *)  *) 
+| absptlsid: absdataid 
+| absobjsid: absdataid
+(* ID for the component of abstract service objects in the abstract state *)  
 .
 
 Definition absdataid_eq (id1 id2:absdataid):=
@@ -673,8 +680,6 @@ Definition absdataid_eq (id1 id2:absdataid):=
   | curtid, curtid => true
   | absptlsid, absptlsid => true
   | absobjsid, absobjsid => true
-  (* | auxlocid, auxlocid => true  *)
-  (* | auxptrid, auxptrid => true   *)
   | _, _ => false
   end.
 
@@ -694,28 +699,13 @@ Definition absdataid_lt (id1 id2:absdataid):=
   | curtid, ostmid => false
   | curtid, curtid => false
   | curtid, _ => true  
-  | absptlsid,abstcblsid => false (* ostcbpriotbl *)
+  | absptlsid,abstcblsid => false 
   | absptlsid,absecblsid => false
   | absptlsid,ostmid => false
   | absptlsid,curtid => false
   | absptlsid,absptlsid => false
   | absptlsid,_ => true
   | absobjsid, _ (* abstcblsid *) => false (* abstract objs *) 
-  (* | absobjsid, absecblsid => false *)
-  (* | absobjsid, ostmid => false *)
-  (* | absobjsid, curtid => false *)
-  (* | absobjsid, absptlsid => false  *)
-  (* | absobjsid, absobjsid => false  *)
-  (* | absobjsid, _ => true  *)
-  (* | auxlocid, abstcblsid => false (* auxliary program location *) *)
-  (* | auxlocid, absecblsid => false  *)
-  (* | auxlocid, ostmid => false  *)
-  (* | auxlocid, curtid => false  *)
-  (* | auxlocid, absptlsid => false *)
-  (* | auxlocid, absobjsid => false  *)
-  (* | auxlocid, auxlocid => false  *)
-  (* | auxlocid, _ => true  *)
-  (* | auxptrid, _ => false *)
   end.
 
 Module absdataidspec.
@@ -796,7 +786,7 @@ Inductive absdata:=
 | ostm: ostime -> absdata
 | oscurt: addrval -> absdata
 | absptls: PtbMod.map -> absdata 
-| absobjs: ObjMod.map -> absdata 
+| absobjs: ObjMod.map -> absdata (* the service objects in the abstract state *) 
 .
 
 Module absdatastru.
@@ -809,8 +799,6 @@ End absdatastru.
 Module OSAbstMod := MapLib.MapFun absdataidspec absdatastru.
 
 Definition osabst:= OSAbstMod.map. 
-
-(* Definition abstdel := fun (M:OSAbstMod.map) a => OSAbstMod.minus M (OSAbstMod.sig a (abstcblist emp)). *)
 
 Program Instance AMap: PermMap absdataid absdata osabst :=
   {
@@ -905,7 +893,13 @@ Next Obligation.
   apply OSAbstMod.map_del_sem.
 Qed.
 
+(* type for primitive operations in the abstract statements for functions *) 
+(* this definition enables a primitive operation to yield no new abstract state *)
+(* this is used to signal that an assumption is not satisfied *) 
 Definition osabstep := vallist -> osabst -> (option val * option osabst) -> Prop.
+
+(* the following is the original definition for osabstep in the verification of uC/OS-II *) 
+(* Definition osabstep := vallist -> osabst -> (option val * option osabst) -> Prop. *)
 
 Definition absexpr := osabst -> Prop.
 

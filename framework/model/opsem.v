@@ -1203,15 +1203,16 @@ Definition eqdomtls (tls tls':TcbMod.map):=
 Definition eqdomO (O O':osabst):= (forall (x:absdataid), indom O x <-> indom O' x) /\
                                   ( forall tls,  get O abstcblsid = Some (abstcblist tls) ->
                                                  exists tls',  get O' abstcblsid = Some (abstcblist tls') /\ eqdomtls tls tls' ).
-(*
-Definition eqdomO (O O':osabst):= (forall x,  indom O x <->  indom O' x) /\
-                                  ( (~ exists tls,  get O abstcblsid = Some (abstcblist tls)) \/
-                                    exists tls tls',  get O abstcblsid = Some (abstcblist tls) /\
-                                                      get O' abstcblsid = Some (abstcblist tls') /\
-                                                     eqdomtls tls tls' ).
- *)
+
 Definition tidsame (O O':osabst):=  get O curtid =  get O' curtid.
 
+
+(* the new definition of a step of execution by an abstract statement *)
+(* the modification is performed to take care of partiality ---
+     the result of an atomic operation or an assumption can be the abstract statement "spec_abort"
+     (the notation for it is ABORT) *)
+(* the result of evaluating an explicity assumption (ASSERT b) is also the abstract statement
+     "spec_abort" in case the assumed conditoin b is not satisfied *)
 Inductive spec_step: ossched -> spec_code -> osabst -> spec_code -> osabst -> Prop :=
 | spec_prim_step:
     forall sc O O' (step:osabstep) v Of vl OO OO',
@@ -1275,6 +1276,8 @@ Inductive spec_step: ossched -> spec_code -> osabst -> spec_code -> osabst -> Pr
       spec_step sc sched OO (spec_done None) OO
 . 
 
+(* the following definition that is commented out is the old definition of a step of
+     execution by an abstract statement *) 
 (* Inductive spec_step: ossched -> spec_code -> osabst -> spec_code -> osabst -> Prop := *)
 (* | spec_prim_step: *)
 (*     forall sc O O' (step:osabstep) v Of vl OO OO', *)
@@ -1333,47 +1336,53 @@ Inductive spec_stepstar:  ossched -> spec_code -> osabst -> spec_code -> osabst 
       spec_stepstar sc c' O' c'' O'' ->
       spec_stepstar sc c O c'' O''.
 
+
 Inductive hapistep:  osspec -> code -> osabst -> code -> osabst -> Prop:=
+
+(* the constructor is modified by introducing an arbitrary list vl' of values *)
+(* the values in vl' is used to represent the intermediate results of computation
+     in a service function 
+     --- including the return values from the underlying kernel functions *)
 | hapienter_step:
-    forall (A :osspec) (B:osapispec) (C:osintspec) (D : ossched) (O:osabst) (cd cd':code)
-           (ks:stmtcont) (f:fid) (vl:vallist) r tl tp vl',
-      A= (B, C, D) ->
-      tl_vl_match tl vl = true->
-      cd = (curs (sfexec f (List.rev vl) (List.rev tl)), (kenil, ks)) ->
-      cd'=  (curs (hapi_code (r (vl++vl'))), (kenil, ks))->
-      B f = Some (r,(tp,tl)) ->
-      hapistep  A cd O cd' O
-                
+  forall (A :osspec) (B:osapispec) (C:osintspec) (D : ossched) (O:osabst) (cd cd':code)
+         (ks:stmtcont) (f:fid) (vl:vallist) r tl tp vl',
+    A= (B, C, D) ->
+    tl_vl_match tl vl = true->
+    cd = (curs (sfexec f (List.rev vl) (List.rev tl)), (kenil, ks)) ->
+    cd'=  (curs (hapi_code (r (vl++vl'))), (kenil, ks))->
+    B f = Some (r,(tp,tl)) ->
+    hapistep  A cd O cd' O
+              
 | hidapi_step :
-    forall (A :osspec) (O O':osabst)
-           ke ks cd cd',
-      spec_step (snd A) cd O cd' O' ->
-      hapistep A ((curs (hapi_code cd )),(ke, ks)) O ((curs (hapi_code cd')),(ke,ks)) O'
+  forall (A :osspec) (O O':osabst)
+         ke ks cd cd',
+    spec_step (snd A) cd O cd' O' ->
+    hapistep A ((curs (hapi_code cd )),(ke, ks)) O ((curs (hapi_code cd')),(ke,ks)) O'
 
 | hapiexit_step :
-    forall (A :osspec) (O:osabst)
-           ke ks v,
-      hapistep A ((curs (hapi_code (spec_done v))),(ke, ks)) O ((curs (sskip v)),(ke,ks)) O
-               
+  forall (A :osspec) (O:osabst)
+         ke ks v,
+    hapistep A ((curs (hapi_code (spec_done v))),(ke, ks)) O ((curs (sskip v)),(ke,ks)) O
+             
 | hintex_step: forall  (A :osspec) c ke ks  O,
-                 hapistep A  (curs (hapi_code (spec_done None)),(kenil,kevent c ke ks)) O
-                          (c,(ke,ks)) O.
+    hapistep A  (curs (hapi_code (spec_done None)),(kenil,kevent c ke ks)) O
+      (c,(ke,ks)) O.
 
 Inductive htstep: hprog -> tid -> code -> clientst -> osabst -> code -> clientst -> osabst -> Prop:=
 | htclt_step : forall (p:hprog) (pc:progunit) (A:osspec) (c c':code) (m m':smem)
                       (cenvs:cltenvs)  (ge le le':env) (M M':mem) (t:tid) 
                       (cst cst':clientst) (O:osabst),
-                 p= (pc, A) -> 
-                 cstep pc c m c' m' -> 
-                 m = (ge, le, M) -> m' = (ge, le', M') ->
-                 get cenvs t = Some le ->
-                 cst = (ge,cenvs, M) ->
-                 cst'=  (ge, ( set cenvs t le'), M') ->
-                 htstep p t c cst O c' cst' O
+    p= (pc, A) -> 
+    cstep pc c m c' m' -> 
+    m = (ge, le, M) -> m' = (ge, le', M') ->
+    get cenvs t = Some le ->
+    cst = (ge,cenvs, M) ->
+    cst'=  (ge, ( set cenvs t le'), M') ->
+    htstep p t c cst O c' cst' O
 | hapi_step : forall (p:hprog)(A: osspec) (pc:progunit) (O O':osabst) (c c':code) (cst:clientst) t,
-                p=(pc, A) ->
-                hapistep  A c O c' O'->
-                htstep p t c cst O c' cst O'.
+    p=(pc, A) ->
+    hapistep  A c O c' O'->
+    htstep p t c cst O c' cst O'.
 
 
 Inductive htstepev:  hprog  -> tid -> code -> clientst -> osabst -> code -> clientst -> osabst -> val -> Prop:=

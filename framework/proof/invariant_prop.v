@@ -7408,7 +7408,7 @@ Lemma disj_complex'''f :
 Proof.
   intros.
   assert (exists x0', join OO'' (minus Ol Oc) x0').
-  assert (get O' a = Some b). Check join_get_r.
+  assert (get O' a = Some b).
   eapply join_get_r; eauto.
   assert (get (merge O' Os') a = Some b).
   rewrite map_merge_sem.

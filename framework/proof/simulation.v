@@ -24,7 +24,9 @@ Inductive hpsteps:
 Definition prgabsabt (p: hprog) (T: tasks) (cst: clientst) (O: osabst) :=
   exists T' cst' O', hpsteps p T cst O T' cst' O' /\ absabt T'.
 
-
+(* ProgSim is the definition of the simulation relation for systems. *)  
+(* New conditions are introduced to express that the simulation of a concrete execution step
+     is only necessary if the assumptions in the abstract system are satisfied. *)  
 CoInductive ProgSim :   lprog -> tasks -> osstate  -> hprog -> tasks -> osabst -> clientst -> tid -> Prop:=
 | prog_sim:
     forall (pl:lprog) (ph:hprog) (Tl Th:tasks) (S:osstate) (O:osabst) (cst:clientst) t,
@@ -32,6 +34,8 @@ CoInductive ProgSim :   lprog -> tasks -> osstate  -> hprog -> tasks -> osabst -
       (
         forall Tl' S' cst' t',
           lpstep pl Tl cst S t Tl' cst' S' t'->
+          (* newly introduced condition expressing that the assumptions in the abstract system 
+               are satisfied *) 
           ~prgabsabt ph Th cst O -> 
           exists Th' O', hpstepstar ph Th cst O Th' cst' O' /\
                          (ProgSim pl Tl' S' ph Th' O' cst' t')
@@ -39,17 +43,22 @@ CoInductive ProgSim :   lprog -> tasks -> osstate  -> hprog -> tasks -> osabst -
       (
         forall Tl' S' cst' ev t',
           lpstepev pl Tl cst S t Tl' cst' S' t' ev ->
+          (* newly introduced condition expressing that the assumptions in the abstract system 
+               are satisfied *) 
           ~prgabsabt ph Th cst O -> 
           exists Th' O', hpstepevstar ph Th cst O Th' cst' O' ev /\
                          (ProgSim pl Tl' S' ph Th' O' cst' t' )
       )->
       (
         lpstepabt pl Tl cst S t -> 
+          (* newly introduced condition expressing that the assumptions in the abstract system 
+               are satisfied *) 
         ~prgabsabt ph Th cst O -> 
         hpstepabtstar ph Th cst O 
       )
       -> ProgSim pl Tl S ph Th O cst t.
 
+(* the following is the original definition of ProgSim in the verification of uC/OS-II *)
 (* CoInductive ProgSim :   lprog -> tasks -> osstate  -> hprog -> tasks -> osabst -> clientst -> tid -> Prop:= *)
 (* | prog_sim: *)
 (*     forall (pl:lprog) (ph:hprog) (Tl Th:tasks) (S:osstate) (O:osabst) (cst:clientst) t, *)
@@ -124,6 +133,9 @@ Definition tskabsabt (p: hprog) (c: code) (cst: clientst) (O: osabst) t :=
   exists ke' ks' cst' O',
     htsteps p t c cst O (curs (hapi_code spec_abort), (ke', ks')) cst' O'. 
 
+(* TaskSim is the definition of the simulation relation for tasks. *)  
+(* New conditions are introduced to express that the simulation of a concrete execution step
+     is only necessary if the assumptions in the task executing the abstract program are satisfied. *)  
 CoInductive TaskSim: 
   lprog -> code -> taskst -> hprog -> code -> osabst -> 
   LocalInv -> Inv -> reltaskpred -> tid -> Prop :=
@@ -136,6 +148,8 @@ CoInductive TaskSim:
           joinm2 o Ms Mf o2 ->
           join O Os OO ->
           ltstep pl t Cl cst o2 Cl' cst' o'' ->
+          (* newly introduced condition expressing that the assumptions in the task 
+               executing the abstract program are satisfied *)  
           ~tskabsabt ph Ch cst OO t ->
           (
             exists Ch' OO'  o'  Ms'  O' Os', 
@@ -153,6 +167,8 @@ CoInductive TaskSim:
           joinm2 o Ms Mf o2 ->
           join O Os OO ->
           ltstepev pl t Cl cst o2 Cl' cst' o'' ev ->
+          (* newly introduced condition expressing that the assumptions in the task 
+               executing the abstract program are satisfied *)  
           ~tskabsabt ph Ch cst OO t ->
           (
             exists Ch' OO'  o'  Ms'  O' Os', 
@@ -171,6 +187,8 @@ CoInductive TaskSim:
           satp (substaskst o Ms)  Os  (INV I) ->                                          
           disjoint (getmem o) Ms -> 
           join O Os OO ->
+          (* newly introduced condition expressing that the assumptions in the task 
+               executing the abstract program are satisfied *)  
           (exists cst, ~tskabsabt ph Ch cst OO t) ->
           (
             exists Ch' s k  OO'  Mc ol O' Os' Ol Oc , 
@@ -226,6 +244,8 @@ CoInductive TaskSim:
           satp (substaskst o Ms) Os  (INV I) ->   
           disjoint (getmem o) Ms -> 
           join O Os OO ->
+          (* newly introduced condition expressing that the assumptions in the task 
+               executing the abstract program are satisfied *)  
           (exists cst, ~tskabsabt ph Ch cst OO t) ->
           (
             exists O' Os' Ch OO', 
@@ -248,6 +268,8 @@ CoInductive TaskSim:
           join O Os OO ->
           join OO Of OOO ->
           ltstepabt pl t Cl cst o' ->
+          (* newly introduced condition expressing that the assumptions in the task 
+               executing the abstract program are satisfied *)  
           ~tskabsabt ph Ch cst OOO t ->
           htstepabtstar ph t Ch cst OOO
       )->
@@ -257,6 +279,8 @@ CoInductive TaskSim:
           satp (substaskst o Ms) Os (INV I) ->
           disjoint (getmem o) Ms ->
           join O Os OO ->
+          (* newly introduced condition expressing that the assumptions in the task 
+               executing the abstract program are satisfied *)  
           (exists cst, ~tskabsabt ph Ch cst OO t) ->
           (
             exists Ch'  v1 v2  t' p s k   OO' OO''  ,
@@ -302,6 +326,8 @@ CoInductive TaskSim:
           satp (substaskst o Ms) Os  (INV I) ->
           disjoint (getmem o) Ms  ->
           join O Os  OO ->
+          (* newly introduced condition expressing that the assumptions in the task 
+               executing the abstract program are satisfied *)  
           (exists cst, ~tskabsabt ph Ch cst OO t) ->
           (
             exists Ch' p s k t' OO' OO''  O' Os' ,
@@ -342,25 +368,6 @@ Definition TaskSimAsrt
   forall (o:taskst) (O:osabst), 
     P (o, O)  /\  satp o O (CurLINV lasrt t)  -> TaskSim pl Cl o ph Ch O lasrt I P t.
 
-(*
-Definition TcbBJ (tls : TcbMod.map) := 
-  (
-    forall t t' pr a pr' a' msg msg', 
-     t<>t' -> 
-     get tls t = Some (pr,a,msg)->
-     get tls t' = Some (pr',a',msg') -> 
-     pr <>   pr'
-  )
-  /\
-  (
-    forall t t' pr a pr' a' msg msg',
-     pr<>pr' -> 
-     get tls t = Some (pr,a,msg) ->
-     get tls t' = Some (pr',a',msg') ->
-     t <> t'
-  ).
- *)
-
 
 Definition notabort (C:code):=
   ~IsSwitch C /\ ~IsEnd C /\ 
@@ -370,6 +377,9 @@ Definition notabort (C:code):=
 
 Definition notabortm (C:code):= ~IsFcall C /\ notabort C.
 
+(* MethSimMod is the definition of the simulation relation for methods *) 
+(* new conditions are introduced to express that the simulation of a concrete execution step
+     is only necessary if the assumptions in the abstract statement are satisfied *) 
 CoInductive MethSimMod : funspec -> ossched ->  code -> taskst -> absop -> osabst  -> LocalInv ->
                          Inv -> retasrt -> asrt -> retasrt -> tid -> Prop :=
 | meth_sim_mod :
@@ -382,7 +392,9 @@ CoInductive MethSimMod : funspec -> ossched ->  code -> taskst -> absop -> osabs
           satp (substaskst o Ms) Os (INV I) ->
           joinm2 o Ms Mf o2 -> 
           join O Os OO ->
-          loststep p C o2 C' o2' -> 
+          loststep p C o2 C' o2' ->
+          (* newly introduced condition expressing that the assumptions in the abstract statement
+               are satisfied *) 
           ~(exists OO', spec_stepstar sd gamma OO spec_abort OO') -> 
           (
             exists gamma' OO'  o' Ms'  O' Os', 
@@ -400,6 +412,8 @@ CoInductive MethSimMod : funspec -> ossched ->  code -> taskst -> absop -> osabs
           satp (substaskst o  Ms) Os (INV I)->
           disjoint (getmem o) Ms -> 
           join O Os OO ->
+          (* newly introduced condition expressing that the assumptions in the abstract statement
+               are satisfied *) 
           ~(exists OO', spec_stepstar sd gamma OO spec_abort OO') -> 
           ( 
             exists gamma' OO' om M O' Os' Ot Of ,
@@ -430,39 +444,14 @@ CoInductive MethSimMod : funspec -> ossched ->  code -> taskst -> absop -> osabs
                 )
           )
       )->
-      (*
-      (
-        forall  Ms ks x Os OO, 
-          C = (curs (sprim (switch x)), (kenil, ks)) ->
-          satp (substaskst o Ms) Os (INV I)-> 
-          disjoint (getmem o) Ms -> 
-          join O Os OO ->
-          (
-            exists gamma' s OO' ol Mc O' Os' Ol Oc, 
-              gamma' = spec_seq sched s /\
-              hmstepstar sd gamma OO gamma' OO' /\
-              joinmem ol Mc o /\
-              join O' Os' OO'/\
-              join Ol Oc O' /\
-              satp (substaskst o Ms) Os' (INV I) /\
-              satp (substaskst o Mc)  Oc (SWINVt I t) /\
-              satp ol Ol  (EX lg', LINV lasrt t lg' ** Atrue) /\
-              satp (substaskst o Mc) Oc (SWPRE sd x t)  /\
-              (
-                forall Mc' Oc' o' O'', 
-                  satp (substaskst o  Mc') Oc' (SWINVt I t)->
-                  joinmem ol Mc' o' ->
-                  join Ol Oc' O'' ->
-                  MethSimMod spec sd (SKIP, (kenil, ks))  o' s O'' lasrt I r ri q t 
-              )
-          )
-      )->*)
       (
         forall Ms ks x Os OO, 
           C = (curs (sprim (switch x)), (kenil, ks)) ->
           satp (substaskst o Ms) Os (INV I)-> 
           disjoint (getmem o) Ms -> 
           join O Os OO ->
+          (* newly introduced condition expressing that the assumptions in the abstract statement
+               are satisfied *) 
           ~(exists OO', spec_stepstar sd gamma OO spec_abort OO') -> 
           (
             exists gamma' s OO' ol Mc O' Os' Ol Oc,  
@@ -499,6 +488,8 @@ CoInductive MethSimMod : funspec -> ossched ->  code -> taskst -> absop -> osabs
           satp (substaskst o Ms) Os (INV I)->
           disjoint (getmem o) Ms ->
           join O Os OO ->
+          (* newly introduced condition expressing that the assumptions in the abstract statement
+               are satisfied *) 
           ~(exists OO', spec_stepstar sd gamma OO spec_abort OO') -> 
           (
             exists gamma' OO' O' Os',
@@ -518,6 +509,8 @@ CoInductive MethSimMod : funspec -> ossched ->  code -> taskst -> absop -> osabs
           satp (substaskst o Ms) Os (INV I)->
           disjoint (getmem o) Ms ->
           join O Os OO ->
+          (* newly introduced condition expressing that the assumptions in the abstract statement
+               are satisfied *) 
           ~(exists OO', spec_stepstar sd gamma OO spec_abort OO') -> 
           (
             exists gamma' OO' O' Os',
@@ -537,6 +530,8 @@ CoInductive MethSimMod : funspec -> ossched ->  code -> taskst -> absop -> osabs
           satp (substaskst o Ms) Os (INV I) ->
           disjoint (getmem o) Ms ->
           join O Os OO ->
+          (* newly introduced condition expressing that the assumptions in the abstract statement
+               are satisfied *) 
           ~(exists OO', spec_stepstar sd gamma OO spec_abort OO') -> 
           (
             exists gamma' OO' O' Os',
@@ -556,6 +551,8 @@ CoInductive MethSimMod : funspec -> ossched ->  code -> taskst -> absop -> osabs
           satp (substaskst o Ms) Os (INV I) ->
           disjoint (getmem o) Ms ->
           join O Os OO ->
+          (* newly introduced condition expressing that the assumptions in the abstract statement
+               are satisfied *) 
           ~(exists OO', spec_stepstar sd gamma OO spec_abort OO') -> 
           (
             exists  gamma' OO' O' Os',
@@ -573,6 +570,8 @@ CoInductive MethSimMod : funspec -> ossched ->  code -> taskst -> absop -> osabs
           joinm2 o Ms Mf o2 ->
           disjoint O Os ->
           join O Os OO ->
+          (* newly introduced condition expressing that the assumptions in the abstract statement
+               are satisfied *) 
           ~(exists OO', spec_stepstar sd gamma OO spec_abort OO') -> 
           ~ (loststepabt p C o2)
       )->
@@ -582,6 +581,8 @@ CoInductive MethSimMod : funspec -> ossched ->  code -> taskst -> absop -> osabs
           satp (substaskst o Ms) Os (INV I) ->
           disjoint (getmem o) Ms ->
           join O Os OO ->
+          (* newly introduced condition expressing that the assumptions in the abstract statement
+               are satisfied *) 
           ~(exists OO', spec_stepstar sd gamma OO spec_abort OO') -> 
           (
             exists gamma' v1 v2 t' p s  OO'  OO'' ol , 
@@ -607,6 +608,8 @@ CoInductive MethSimMod : funspec -> ossched ->  code -> taskst -> absop -> osabs
           satp (substaskst o Ms) Os (INV I) ->
           disjoint (getmem o) Ms  ->
           join O Os OO->
+          (* newly introduced condition expressing that the assumptions in the abstract statement
+               are satisfied *) 
           ~(exists OO', spec_stepstar sd gamma OO spec_abort OO') -> 
           (
             exists gamma' p s t'  OO' ,
@@ -640,43 +643,9 @@ CoInductive MethSimMod : funspec -> ossched ->  code -> taskst -> absop -> osabs
               )
           )
       )->
-      (* (   *)
-      (*   (exists O', spec_stepstar sd gamma O spec_abort O') ->  *)
-      (*   MethSimMod spec sd C o gamma O lasrt I r ri q t *)
-      (* ) ->  *)
-      (*
-      (
-        forall  Ms Os e ks t' OO, 
-          C = (curs (sprim (stkfree e)),(kenil,ks))->
-          evalval e (get_smem o) = Some (Vptr t') ->
-          satp (substaskst o Ms) Os  (INV I) ->
-          disjoint (getmem o) Ms  ->
-          join O Os  OO->
-          (
-            exists gamma' p s OO' OO'' O' Os' ,
-              gamma' = (spec_seq (spec_del (Vint32 p)) s) /\
-              hmstepstar sd gamma OO gamma' OO' /\
-              abs_delother_step OO' OO' t t' p /\
-              join O' Os' OO'' /\ 
-              satp (substaskst o Ms) Os' (INV I) /\
-              satp o O' (CurLINV lasrt t) /\
-              forall o' O'' Mdel Odel,
-                (
-                  satp (substaskst o Mdel) Odel  (EX lg, LINV lasrt t' lg)  ->
-                  joinmem o Mdel o' ->
-                  join O' Odel O'' ->
-                  MethSimMod spec sd  (SKIP, (kenil,ks))  o' s O''  lasrt I r ri q t
-                )
-          )
-      )->
-       *)
+
       MethSimMod spec sd C o gamma O lasrt I r ri q t. (* | *)
   
-  (* meth_sim_abort_mod: *)
-  (* forall spec sd C o gamma O lasrt I r ri q t,  *)
-  (*   (exists O', spec_stepstar sd gamma O spec_abort O') ->  *)
-  (*   MethSimMod spec sd C o gamma O lasrt I r ri q t.  *)
-
 
 Notation "  '{[' p , sd , li , I , r , ri , q  ']}'  '||-' t '(' C , o ')'  '<_msim' '(' gamma ,  O  ')' "
   :=  (MethSimMod p sd  C o gamma O li I r ri q t) (at level 200).     

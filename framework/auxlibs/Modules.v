@@ -443,7 +443,6 @@ Module idxspec.
   Proof.
     intros.
     unfold beq.
-    Search Int.eq.
     apply Int.eq_false.
     assumption.
   Qed.
@@ -454,8 +453,6 @@ Module idxspec.
       blt a a' = true -> blt a' a'' = true -> blt a a'' = true.
   Proof.
     unfold blt; intros.
-    Print Int.lt.
-    Search Int.lt.
     unfold Int.lt in *. 
     remember (zlt (Int.signed a') (Int.signed a'')) as Hbb.
     remember (zlt (Int.signed a) (Int.signed a')) as Hbb'.

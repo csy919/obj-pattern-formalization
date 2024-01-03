@@ -5,6 +5,7 @@ Require Import os_ucos_h.
 
 Open Scope code_scope.
 
+(* the code for the function that deletes a kernel object *)
 Definition kernel_obj_delete_impl := 
 OS_EVENT∗ ·kernel_obj_delete·(⌞ptr @ OS_EVENT∗⌟)··{  
            ⌞

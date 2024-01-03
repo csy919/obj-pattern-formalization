@@ -29,6 +29,7 @@ Definition kobjcre_ecb_activate (vl: vallist) (O1: osabst) (rst: option val * op
        \/ v <> Vptr sid /\ O_opt = None)
   end.
 
+(* the abstract program for the function **kernel_obj_create** *)
 Definition kobjcre (vl: vallist) :=
   match vl with
     vn :: v' :: nil => 

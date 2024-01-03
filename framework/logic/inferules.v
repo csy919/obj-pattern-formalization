@@ -812,7 +812,9 @@ Fixpoint dl_add d1 d2:=
   end.
 
 
-
+(* the modified definition of the function used to generate the pre-conditions of API functions *)
+(* the modification is in introducing the list **vl'** of values used to represent the intermediate
+     computation results, including the return values of the internal functions *) 
 Definition BuildPreA':= 
   fun (p : progunit) (f : fid) (abs : osapi) (vl : vallist)  (pa : LocalInv) t lg=>
     match p f with

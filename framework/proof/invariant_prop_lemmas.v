@@ -221,7 +221,31 @@ Proof.
   clear H4.
   clear H3.
   Ltac infer ::= infer_v.
-  hy.
+  Ltac hy_join_first ls t :=
+  match goal with
+  | |- join ?x ?y ?z =>
+        apply join_sem;
+         [ hy_disjoint ls t
+         | (* let ls' := constr:((ls, merge x y)) in
+           hy_eql ls' t *) ]
+  end.
+   let ins := calc_ins in
+    let t := fresh in
+    match goal with
+    | |- join _ _ _ => hy_join_first ins t
+    | |- _ => idtac
+    end.
+  crush.
+  crush.
+  crush.
+  crush.
+    let ins := calc_ins in
+    let t := fresh in
+    let ls' := constr:((ins, merge (minus (merge (merge x4 x5) O2) x5) x5)) in
+    match goal with
+    | |- _ => hy_eql ls' t
+    end; crush.
+(*   hy. *)
   Ltac infer ::= infer_q.
 Qed.
 

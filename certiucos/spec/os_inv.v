@@ -954,37 +954,6 @@ Definition tcbdllflag head l := dllsegflag head Vnull l V_OSTCBNext.
 Definition tcbdllseg  (head headprev tail tailnext : val) (l : list vallist) :=
   dllseg  head headprev tail tailnext l OS_TCB_flag  V_OSTCBPrev V_OSTCBNext .
 
-Notation loc_off := (Int.repr 25%Z).
-Notation ptr_off := (Int.repr 26%Z).
-
-Definition objaux_node a v1 v2 := 
-      PV (get_off_addr a loc_off) @ Tint8 |-r-> v1 **  
-      PV (get_off_addr a ptr_off) @ (Tptr OS_EVENT) |-r-> v2 ** 
-      [| rule_type_val_match Tint8 v1 = true |] ** 
-      [| rule_type_val_match (Tptr OS_EVENT) v2 = true |]. 
-
-Fixpoint llsegobjaux 
-         (head tailnext: val) 
-         (l: list vallist)
-         (locmp: AuxLocMod.map) 
-         (ptrmp: AuxPtrMod.map)  
-         (next: vallist->option val) :=
-  match l with
-    nil => [| head = tailnext |]  ** [| l = nil |] ** [| locmp = emp /\ ptrmp = emp |]  
-  | vl :: l' => (
-    EX a vn v1 v2 locmp' ptrmp',
-      [| head = Vptr a |] **
-      [| next vl = Some vn |] ** 
-      objaux_node a v1 v2 ** 
-      [| joinsig a v1 locmp' locmp |] ** 
-      [| joinsig a v2 ptrmp' ptrmp |] ** 
-      llsegobjaux vn tailnext l' locmp' ptrmp' next 
-    )
-  end. 
-
-Definition tcbllsegobjaux
-  (tcbh: val) (vll: list vallist) (locmp: AuxLocMod.map) (ptrmp: AuxPtrMod.map) :=  
-  llsegobjaux tcbh Vnull vll locmp ptrmp V_OSTCBNext.   
 
 Definition AOSTCBList_old
   (p1 p2: val) (l1 l2:list vallist) (rtbl : vallist) (hcurt:addrval)(tcbls : TcbMod.map) :=
@@ -998,6 +967,9 @@ Definition AOSTCBList_old
       [| TCBList_P p1 l1 rtbl tcbls1 |]**
       [| TCBList_P p2 l2 rtbl tcbls2 |].
 
+
+Notation loc_off := (Int.repr 25%Z).
+Notation ptr_off := (Int.repr 26%Z).
 
 Fixpoint sllsegfreeflag (head tailnext : val) (l : list vallist)
         (next : vallist -> option val) {struct l} : asrt :=
@@ -1984,8 +1956,6 @@ Definition isloc (v: val) :=
     v = Vint32 (Int.repr __Loc_objdel)  
   ).
 
-(* Definition isevptr (v: val) := isptr v. *)
-
 Definition OSLInv t lg :=
   EX v loc ptr,  
   PV (get_off_addr t flag_off) @ Tint8 |-r-> v **
@@ -1994,19 +1964,6 @@ Definition OSLInv t lg :=
   [| lg = logic_val  v :: logic_val loc :: logic_val ptr :: nil /\ 
       isflag v /\ isloc loc /\ isptr ptr |].   
   
-(* Definition AOSTCBList (p1 p2: val) (l1 l2:list vallist) (rtbl : vallist) *)
-(*            (hcurt:addrval)(tcbls : TcbMod.map) := *)
-(*   EX tail1 tail2 tcbls1 tcbls2, *)
-(*   (GV OSTCBList @ (Tptr OS_TCB) |-> p1) ** *)
-(*                                         tcbdllseg p1 Vnull tail1 p2 l1 **  *)
-(*                                         (GV OSTCBCur @ (Tptr OS_TCB) |-r-> p2) ** *)
-(*                                         tcbdllseg  p2 tail1 tail2 Vnull l2 ** *)
-(*                                         [|p1 <> Vnull /\ p2 = Vptr hcurt|] **  *)
-(*                                         [| join tcbls1 tcbls2 tcbls|] ** *)
-(*                                         [| TCBList_P p1 l1 rtbl tcbls1 |]** *)
-(*                                         [| TCBList_P p2 l2 rtbl tcbls2 |]. *)
-
-
 Definition AOSTCBList (p1 p2: val) (l1 l2:list vallist) (rtbl : vallist)
            (hcurt:addrval)(tcbls : TcbMod.map) :=
   EX tail1 tail2 tcbls1 tcbls2,
@@ -2020,13 +1977,59 @@ Definition AOSTCBList (p1 p2: val) (l1 l2:list vallist) (rtbl : vallist)
       [| TCBList_P p2 l2 rtbl tcbls2 |].
 
 
-(* new definition about service objects in os_inv.v *)
 
+(*******************************************************************************)
+(********************* DEFINITIONS ABOUT SERVICE OBJ *********************)
+(*******************************************************************************)
+
+Definition objaux_node a v1 v2 := 
+      PV (get_off_addr a loc_off) @ Tint8 |-r-> v1 **  
+      PV (get_off_addr a ptr_off) @ (Tptr OS_EVENT) |-r-> v2 ** 
+      [| rule_type_val_match Tint8 v1 = true |] ** 
+      [| rule_type_val_match (Tptr OS_EVENT) v2 = true |]. 
+
+Fixpoint llsegobjaux 
+         (head tailnext: val) 
+         (l: list vallist)
+         (locmp: AuxLocMod.map) 
+         (ptrmp: AuxPtrMod.map)  
+         (next: vallist->option val) :=
+  match l with
+    nil => [| head = tailnext |]  ** [| l = nil |] ** [| locmp = emp /\ ptrmp = emp |]  
+  | vl :: l' => (
+    EX a vn v1 v2 locmp' ptrmp',
+      [| head = Vptr a |] **
+      [| next vl = Some vn |] ** 
+      objaux_node a v1 v2 ** 
+      [| joinsig a v1 locmp' locmp |] ** 
+      [| joinsig a v2 ptrmp' ptrmp |] ** 
+      llsegobjaux vn tailnext l' locmp' ptrmp' next 
+    )
+  end. 
+
+(*
+   - The following definition generates the assertion for the corresopndence between
+      the abstract and concrete representations of the auxiliary variables for the
+      current program locations and the currently handled ECBs for the tasks.
+      On the concrete level, the auxiliary variables for the current program location
+      and the currently handled ECB of each task are stored in the task control block (TCB)
+      for the task.
+    - The parameter **tcbh** represents the head pointer for the linked list of TCBs.
+    - The parameter **vll** is a list. Each element of this list is another list that represents
+       the values for the members of a specific TCB. 
+ *) 
+Definition tcbllsegobjaux
+  (tcbh: val) (vll: list vallist) (locmp: AuxLocMod.map) (ptrmp: AuxPtrMod.map) :=  
+  llsegobjaux tcbh Vnull vll locmp ptrmp V_OSTCBNext.   
+
+
+
+(* The following function is used to generate the representation predicates
+     for the service objects *) 
 Definition AObjArr (vll :list vallist) := 
  EX l, GV obj_arr @ (Tptr service_obj_t) |-> (Vptr l) **
   Aarray_new l (Tarray service_obj_t (nat_of_Z (MAX_OBJ_NUM))) vll ** 
   [| new_array_type_vallist_match service_obj_t vll /\ length vll = (nat_of_Z MAX_OBJ_NUM)|]. 
-
 
 (*-----------------------------------------------------------------------------------*)
 (*  members of a service object                                                                       *)
@@ -2034,11 +2037,16 @@ Definition AObjArr (vll :list vallist) :=
 Definition V_ObjAttr (vl:vallist) := nth_val 0 vl.
 Definition V_ObjPtr (vl:vallist) := nth_val 1 vl.  
 
+(* If a service object contains a valid reference to a kernel object,
+     then the referenced kernel object is active (allocated and initialized). *) 
 Definition RH_OBJ_ECB_P (ecbls: EcbMod.map) (sobjs: ObjMod.map) := 
   forall idx oid att, 
     get sobjs idx = Some (objid oid, att) ->
     exists n wls, get ecbls oid = Some (abssem n, wls).  
 
+(* The following definition is an invariant condition that describes the 
+     correspondence between the abstract representation (absobj) and 
+     the concrete representation (vl) of a service object. *)   
 Definition RHL_OBJ_P vl (absobj: obj_id * int32) (vhold: addrval) := 
   forall oid att, 
     absobj = (oid, att) ->
@@ -2051,6 +2059,9 @@ Definition RHL_OBJ_P vl (absobj: obj_id * int32) (vhold: addrval) :=
         )
     ).
 
+(* The following definition is an invariant condition that describes the
+     correspondence between the abstract and concrete representations
+     of all service objects. *) 
 Fixpoint ObjArray_P (v: val) (l: list vallist) (objs: ObjMod.map) (vhold: addrval) 
   {struct l} : Prop :=
   match l with
@@ -2066,7 +2077,7 @@ Fixpoint ObjArray_P (v: val) (l: list vallist) (objs: ObjMod.map) (vhold: addrva
   end.
 
 Definition AObjs objl absobjs ecbls (vhold: addrval) :=  
-  AObjArr objl **
+  AObjArr objl **  
     [| ObjArray_P (Vint32 Int.zero) objl absobjs vhold |] **
     [| RH_OBJ_ECB_P ecbls absobjs |]. 
 
@@ -2077,14 +2088,21 @@ Require Import seplog_pattern_tacs.
 
 Definition obj_ref objs ptr := exists idx att, get objs idx = Some (objid ptr, att).  
 
+(* There is at most one service object that references the same kernel object. *) 
 Definition objref_distinct objs :=
   forall ptr idx1 idx2 att1 att2, 
     get objs idx1 = Some (objid ptr, att1) ->
     get objs idx2 = Some (objid ptr, att2) -> 
     idx1 = idx2. 
 
+
+(* The pointer **ptr** points to an active kernel object
+      (specifically, a kernel semaphore). *)  
 Definition is_kobj ecbls ptr := exists n wl, get ecbls ptr = Some (abssem n, wl).
 
+
+(* There is at most one task that is attempting at creating service objects based on
+     the same underlying ECB (kernel object). *)
 Definition objcre_nodup (locmp: AuxLocMod.map) (ptrmp: AuxPtrMod.map) :=
   forall t1 t2 ptr1 ptr2,
     t1 <> t2 -> 
@@ -2094,6 +2112,9 @@ Definition objcre_nodup (locmp: AuxLocMod.map) (ptrmp: AuxPtrMod.map) :=
     get ptrmp t2 = Some (Vptr ptr2) ->   
     ptr1 <> ptr2.  
 
+
+(* There is at most one task that is attempting to delete the underlying ECB
+     for (kernel object) a service object. *) 
 Definition objdel_nodup (locmp: AuxLocMod.map) (ptrmp: AuxPtrMod.map) :=
   forall t1 t2 ptr1 ptr2,
     t1 <> t2 -> 
@@ -2104,6 +2125,16 @@ Definition objdel_nodup (locmp: AuxLocMod.map) (ptrmp: AuxPtrMod.map) :=
     ptr1 <> ptr2. 
 
 
+(*
+  - The following definition is the main invariant condition that depends on
+     the current program points and the currently handled ECB by the tasks.
+  - The current program point and the currently handled ECB by each task
+     are represented using auxiliary variables with fractional permission.
+  - The parameter **locmp** is an abstract representation of the correspondence
+     between tasks and their current program locations.
+  - The parameter **ptrmp** is an abstract representation of the correspondence
+     between tasks and their currentnly handled ECBs.
+ *) 
 Definition OBJ_AUX_P
   (locmp: AuxLocMod.map) (ptrmp: AuxPtrMod.map) ecbls fecbh fecbvl (objs: ObjMod.map)  := 
   
@@ -2128,6 +2159,8 @@ Definition OBJ_AUX_P
 
 Parameter vhold_addr : addrval.
 
+(* The following definition collects the invariant conditions relevant for the
+     service objects. *) 
 Definition AOBJ objl absobjs ecbls (vhold: addrval) tcblh tcbvl fecbh fecbvl  :=
   EX locmp ptrmp,
       HObjs absobjs **
@@ -2138,6 +2171,8 @@ Definition AOBJ objl absobjs ecbls (vhold: addrval) tcblh tcbvl fecbh fecbvl  :=
       [| objdel_nodup locmp ptrmp |] **  
       [| objref_distinct absobjs |] ** 
       tcbllsegobjaux tcblh tcbvl locmp ptrmp. 
+
+
 
 Definition OldOSInvWL' ct lg:=
   EX eventl osql qblkl msgql ectrl ptbl p1 p2 tcbl1 tcbcur tcbl2 rtbl rgrp ecbls (tcbls:TcbMod.map) t vhold
@@ -2175,6 +2210,11 @@ Definition OldOSInvWL ct lg:=
           A_isr_is_prop **
           tcbdllflag p1 (tcbl1 ++ (tcbcur::tcbl2)) ** p_local OSLInv ct lg.
 
+
+(* The complete definition for the global invariant.
+     Here, the line with AOBJ is for the service objects.
+     The other conditions are for the originally performed formal verification
+     for the uC/OS-II microkernel. *) 
 Definition OSInv :=
   EX eventl osql qblkl msgql ectrl
     ptbl p1 p2 tcbl1 tcbcur tcbl2 rtbl rgrp ecbls tcbls t ct vhold ptfree lfree fecbh ptls, 
@@ -2192,6 +2232,7 @@ Definition OSInv :=
 
        [| RH_TCBList_ECBList_P ecbls tcbls ct|] **
        A_isr_is_prop.
+
 
 Definition atoy_inv':=(EX i, GV OSIntToyCount@ (Tint32) |-> Vint32 i) .
 Definition atoy_inv:= atoy_inv'** A_isr_is_prop.

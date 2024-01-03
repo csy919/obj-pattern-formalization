@@ -102,6 +102,7 @@ Proof.
   infer_solver 0%nat.
 Qed.
 
+(* the proof that the function **kernel_obj_delete** satisfies its specification *) 
 Lemma kernel_obj_delete_proof:
   forall vl p r logicl ct, 
     Some p =

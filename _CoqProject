@@ -76,7 +76,6 @@ tactics/pure/go.v
 tactics/pure.v
 tactics/ucostac/ucos_bitsmap.v
 certiucos/inline/inline_bittblfunctions.v
-#certiucos/code/os_task.v
 
 certiucos/code/obj/OS_EventWaitListInit.v
 certiucos/code/obj/get_free_obj_idx.v
@@ -145,21 +144,11 @@ tactics/ucostac/ucos_common.v
 certiucos/proofs/ucos_include.v
 certiucos/ucos_lib/OSTimeDlyPure.v
 
-# certiucos/spec/absoprules/time_absop_rules.v
-# certiucos/proofs/time/OSTimeDlyProof.v
-# certiucos/spec/absoprules/mbox_absop_rules.v
-# certiucos/spec/absoprules/mutex_absop_rules.v
-# certiucos/spec/absoprules/sem_absop_rules.v
-# certiucos/spec/absoprules/msgq_absop_rules.v
 certiucos/spec/absop_rules.v
-# certiucos/proofs/time/OSTimeGetProof.v
 
 certiucos/ucos_lib/sem_lab.v
 certiucos/ucos_lib/sem_common.v
 certiucos/ucos_lib/semacc_pure.v
-# certiucos/proofs/semaphore/OSSemCreateProof.v
-# certiucos/proofs/semaphore/OSSemDeleteProof.v
-# certiucos/proofs/semaphore/OSSemAcceptProof.v
 certiucos/ucos_lib/OSQAcceptPure.v
 
 certiucos/ucos_lib/oscore_common.v
@@ -168,82 +157,28 @@ certiucos/ucos_lib/OSQPostPure.v
 certiucos/ucos_lib/Mbox_common.v
 certiucos/ucos_lib/semdel_pure.v
 tactics/ucostac/linv_solver.v
-# certiucos/proofs/mailbox/MboxAcceptProof.v
 certiucos/ucos_lib/OSQCreatePure.v
-# certiucos/ucos_lib/MboxCreatePure.v
-# certiucos/proofs/mailbox/MboxCreateProof.v
-# certiucos/proofs/mailbox/MboxDelProof.v
 certiucos/ucos_lib/tcblist_setnode_lemmas.v
-# certiucos/proofs/mailbox/MboxPendProof.v
-# certiucos/proofs/mailbox/MboxPostProof.v
 certiucos/ucos_lib/sempend_pure.v
-# certiucos/proofs/semaphore/OSSemPendProof.v
 certiucos/ucos_lib/sempost_pure.v
-# certiucos/proofs/semaphore/OSSemPostProof.v
-# certiucos/proofs/msgqueue/OSQAcceptProof.v
-# certiucos/proofs/msgqueue/OSQCreateProof.v
 certiucos/ucos_lib/OSQDelPure.v
-# certiucos/proofs/msgqueue/OSQDelProof.v
 certiucos/ucos_lib/OSQPendPure.v
-# certiucos/proofs/msgqueue/OSQPendProof.v
 certiucos/ucos_lib/OSEventTaskRdyPure.v
-# certiucos/proofs/msgqueue/OSQPostProof.v
-# certiucos/ucos_lib/OSQGetMsgPure.v
-# certiucos/proofs/msgqueue/OSQGetMsgProof.v
 certiucos/ucos_lib/OSIntExitPure.v
-# certiucos/proofs/oscore/IntExitProof.v
 certiucos/ucos_lib/OSEventRemovePure.v
 certiucos/proofs/oscore/OSEventRemoveProof.v
-# certiucos/ucos_lib/OSESearchPure.v
-# certiucos/proofs/oscore/OSEventSearchProof.v
 certiucos/proofs/oscore/OSEventTaskRdy.v
 certiucos/ucos_lib/OSETWaitPure.v
-# certiucos/proofs/oscore/OSEventTaskWait.v
-# certiucos/proofs/oscore/OSEventWaitListInitProof.v
 certiucos/proofs/oscore/OSSchedProof.v
 certiucos/ucos_lib/OSTimeTickPure.v
-# certiucos/proofs/oscore/OSTimeTickProof.v
-# certiucos/spec/absoprules/int_absop_rules.v
-# certiucos/proofs/oscore/TimeIntProof.v
-# certiucos/ucos_lib/ToyIntPure.v
-# certiucos/proofs/oscore/ToyIntProof.v
 certiucos/ucos_lib/OSMutex_common.v
-# certiucos/proofs/mutex/OSMutexAcceptProof.v
-# certiucos/proofs/mutex/OSMutexCreateProof.v
-# certiucos/proofs/mutex/OSMutexDelProof.v
 certiucos/ucos_lib/mutex_pend_pure.v
-# certiucos/proofs/mutex/OSMutexPendPart5.v
 certiucos/ucos_lib/OSMutexPendPure1.v
-# certiucos/proofs/mutex/OSMutexPendPart3.v
-# certiucos/proofs/mutex/OSMutexPendPart1.v
-# certiucos/proofs/mutex/OSMutexPendPart4.v
-# certiucos/proofs/mutex/OSMutexPendPart2.v
-# certiucos/proofs/mutex/OSMutexPendProof.v
 tactics/mathauto/protect.v
 certiucos/ucos_lib/OSMutexPostPure.v
-# certiucos/proofs/mutex/OSMutexPostPart30.v
-# certiucos/proofs/mutex/OSMutexPost_tozh_1.v
-# certiucos/proofs/mutex/OSMutexPost_tozh_2.v
-# certiucos/proofs/mutex/OSMutexPost_tozh.v
-# certiucos/proofs/mutex/OSMutexPostPart3.v
-# certiucos/proofs/mutex/OSMutexPostPart2_2.v
-# certiucos/proofs/mutex/OSMutexPostPart2_1.v
-# certiucos/proofs/mutex/OSMutexPostPart2_0.v
-# certiucos/proofs/mutex/OSMutexPostPart2.v
-# certiucos/proofs/mutex/OSMutexPostProof.v
-# certiucos/proofs/task/task_pure.v
-# certiucos/proofs/task/taskdelete_ready.v
-# certiucos/proofs/task/taskdelete_waiting.v
-# certiucos/proofs/task/taskdelete.v
-# certiucos/proofs/task/taskcreate_pure.v
-# certiucos/proofs/task/taskcreate.v
-# certiucos/proofs/oscore/OSIsOwnerProof.v
-# certiucos/proofs/oscore/OSTCBInitPure.v
-# certiucos/proofs/oscore/OSTCBInitProof.v
 
 framework/proof/lemmasfortoptheo.v
 framework/proof/toptheorem.v
-# certiucos/proofs/ucos_correct.v
 
 tactics/absstep/abs_infer_abt.v
 
@@ -252,10 +187,9 @@ certiucos/ucos_lib/obj/obj_common_ext.v
 certiucos/ucos_lib/obj/freeevtlist_lemmas.v
 certiucos/ucos_lib/obj/objauxvar_lemmas.v
 certiucos/ucos_lib/obj/objaux_pure.v
-
 certiucos/ucos_lib/obj/kobj_delete_pure.v
-tactics/hoareforward/hoare_assign_tac_ext.v
 
+tactics/hoareforward/hoare_assign_tac_ext.v
 
 certiucos/spec/obj/get_free_obj_idx_spec.v
 certiucos/spec/obj/kernel_obj_create_spec.v
@@ -273,5 +207,6 @@ certiucos/proofs/obj/kernel_obj_oper_proof.v
 certiucos/proofs/obj/service_obj_create_proof.v
 certiucos/proofs/obj/service_obj_delete_proof.v
 certiucos/proofs/obj/service_obj_oper_proof.v 
+
 
 

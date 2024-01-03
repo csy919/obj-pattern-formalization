@@ -19,6 +19,7 @@ Open Scope int_scope.
 
 (* pre *)
 
+(* the pre-condition for the function **get_free_obj_idx** *) 
 Definition getFreeObjIdxPre' (vl:vallist) (logicl:list logicvar) ct := 
   EX s objvl lg', 
     Aisr empisr ** Aie false ** Ais nil ** Acs (true :: nil) **
@@ -39,6 +40,7 @@ Definition getFreeObjIdxPre : fpre :=
 Open Scope int_scope.
 Local Open Scope Z_scope.
 
+(* the post-condition for the function **get_free_obj_idx** *) 
 Definition getFreeObjIdxPost' (vl:vallist) (v:option val) (logicl:list logicvar) ct :=
   (EX s objvl i lg',
     Aisr empisr ** Aie false ** Ais nil ** Acs (true :: nil) **

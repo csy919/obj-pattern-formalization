@@ -101,6 +101,7 @@ Proof.
   absimp_abt_solver.
 Qed.
 
+(* the proof that the function **kernel_obj_create** satisfies its specification *) 
 Lemma kernel_obj_create_proof:
   forall vl p r logicl ct, 
     Some p =

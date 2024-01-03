@@ -108,6 +108,7 @@ Proof.
   infer_solver 0%nat.
 Qed.
 
+(* the proof that the function **service_obj_oper** satisfies its specification *) 
 Lemma service_obj_oper_Proof: 
   forall tid vl p r, 
     Some p =

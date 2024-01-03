@@ -5,6 +5,7 @@ Require Import os_ucos_h.
 
 Open Scope code_scope.
 
+(* the code for the function that creates a kernel object *) 
 Definition kernel_obj_create_impl := 
 OS_EVENT∗ ·kernel_obj_create·(⌞attr @ Int16u⌟)··{ 
          ⌞ptr @ OS_EVENT∗⌟;

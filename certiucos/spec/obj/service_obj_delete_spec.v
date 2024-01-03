@@ -60,6 +60,7 @@ Definition sobjdel_del_succ
      O_opt = Some O1
   end.
 
+(* the abstract program for the function service_obj_delete *) 
 Definition sobjdel (vl: vallist) :=
   match vl with
     vidx :: vptr :: nil => 

@@ -7,6 +7,7 @@ Open Scope code_scope.
 
 Definition PlaceHolder:= &ₐ OSPlaceHolder′.
 
+(* the code for the function that operates on a service object *)
 Definition service_obj_oper_impl :=
 Int32 ·service_obj_oper·(⌞idx @ Int32⌟)··{   
         ⌞

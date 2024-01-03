@@ -19,6 +19,8 @@ Local Open Scope list_scope.
 Local Open Scope Z_scope.
 Local Open Scope int_scope.
 
+
+(* the proof that the function **get_free_obj_idx** satisfies its specification *) 
 Lemma get_free_obj_idx_proof:
     forall vl p r logicl ct, 
       Some p =
