@@ -1,5 +1,0 @@
-ROOT=../../../
-RELATIVE=certiucos/proofs/mutex/
-
-cd ${ROOT}
-sh pg ${RELATIVE}$1

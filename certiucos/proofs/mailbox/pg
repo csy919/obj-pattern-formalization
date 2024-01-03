@@ -1,5 +1,0 @@
-ROOT=../../../
-RELATIVE=certiucos/proofs/mailbox/
-
-cd ${ROOT}
-sh pg ${RELATIVE}$1
